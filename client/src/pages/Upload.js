@@ -21,29 +21,34 @@ export default function Upload() {
     }
   }, []);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps } = useDropzone({
     onDrop,
     accept: { 'image/*': ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp'] },
     maxSize: 10 * 1024 * 1024,
     multiple: false,
   });
 
-  // 🔥 Cloudinary upload function
+  // 🔥 Cloudinary upload
   const uploadToCloudinary = async (file) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "fakedetect_unsigned");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", "fakedetect_unsigned");
 
-    const res = await fetch(
-      "https://api.cloudinary.com/v1_1/dnrtk0vp3/image/upload",
-      {
-        method: "POST",
-        body: formData,
-      }
-    );
+      const res = await fetch(
+        "https://api.cloudinary.com/v1_1/dnrtk0vp3/image/upload",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
-    const data = await res.json();
-    return data.secure_url;
+      const data = await res.json();
+      return data.secure_url;
+    } catch (err) {
+      console.error("Cloudinary error:", err);
+      return null;
+    }
   };
 
   const analyze = async () => {
@@ -66,10 +71,21 @@ export default function Upload() {
       // 🔥 Step 1: Upload to Cloudinary
       const imageUrl = await uploadToCloudinary(file);
 
-      // 🔥 Step 2: Send URL to backend
+      console.log("IMAGE URL:", imageUrl);
+
+      // ❌ अगर upload fail
+      if (!imageUrl) {
+        toast.error("Cloudinary upload failed");
+        setAnalyzing(false);
+        return;
+      }
+
+      // 🔥 Step 2: Send to backend
       const { data } = await API.post('/reports/analyze', {
         imageUrl,
       });
+
+      console.log("BACKEND RESPONSE:", data);
 
       clearInterval(stepInterval);
       setProgress(100);
@@ -85,8 +101,8 @@ export default function Upload() {
       }
     } catch (err) {
       clearInterval(stepInterval);
-      console.error(err);
-      toast.error("Upload failed");
+      console.error("ERROR:", err);
+      toast.error(err.response?.data?.message || "Something went wrong");
       setAnalyzing(false);
       setProgress(0);
       setStep(0);
@@ -99,7 +115,6 @@ export default function Upload() {
 
       {!analyzing ? (
         <>
-          {/* Upload Box */}
           <div {...getRootProps()} className="border-2 border-dashed p-10 text-center cursor-pointer">
             <input {...getInputProps()} />
             {preview ? (
@@ -109,7 +124,6 @@ export default function Upload() {
             )}
           </div>
 
-          {/* Button */}
           {file && (
             <button
               onClick={analyze}
