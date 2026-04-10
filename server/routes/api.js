@@ -5,7 +5,7 @@ const { upload } = require('../utils/cloudinary');
 const { analyzeImage } = require('../utils/detector');
 
 // Public API - requires API key in x-api-key header
-router.post('/', apiKeyAuth, upload.single('image'), async (req, res) => {
+router.post('/', apiKeyAuth, async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No image file provided' });
