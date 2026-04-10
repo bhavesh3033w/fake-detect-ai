@@ -13,7 +13,7 @@ const storage = new CloudinaryStorage({
   params: {
     folder: 'fakedetect/uploads',
    
-    transformation: [{ quality: 'auto' }],
+   
     resource_type: 'image',
   },
 });
