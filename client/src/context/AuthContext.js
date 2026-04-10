@@ -3,7 +3,9 @@ import axios from 'axios';
 
 const AuthContext = createContext(null);
 
-const API = axios.create({ baseURL: '/api' });
+const API = axios.create({
+  baseURL: process.env.REACT_APP_API_URL,
+});
 
 // Attach token to every request
 API.interceptors.request.use((config) => {
